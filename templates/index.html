@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Network Security Monitor</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #e0e0e0; display: flex; }
+        .container { padding: 20px; }
+        h1, h2 { color: #bb86fc; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; border: 1px solid #333; text-align: left; }
+        th { background-color: #1f1f1f; }
+        #alerts div { padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+        .severity-High { background-color: #cf6679; color: #121212; }
+        #main-content { flex: 3; }
+        #sidebar { flex: 1; margin-left: 20px; }
+        /* --- STYLE FOR THE NEW BUTTON --- */
+        button { background-color: #bb86fc; color: #121212; border: none; padding: 10px 15px; font-size: 16px; cursor: pointer; margin-top: 10px; border-radius: 5px;}
+    </style>
+</head>
+<body>
+    <div class="container" id="main-content">
+        <h1>Live Local Network Security Monitor</h1>
+
+        <button id="testButton">Click to Show Test Devices</button>
+        <h2>Detected Devices</h2>
+        <table id="device-table">
+            <thead>
+                <tr>
+                    <th>IP Address</th>
+                    <th>MAC Address</th>
+                    <th>Vendor</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+    <div class="container" id="sidebar">
+        <h2>Real-time Alerts</h2>
+        <div id="alerts">
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+
+        socket.on('connect', () => {
+            console.log('Connected to server!');
+        });
+
+        // --- NEW JAVASCRIPT FOR THE BUTTON ---
+        document.getElementById('testButton').addEventListener('click', () => {
+            console.log('Button clicked! Sending test signal to server...');
+            socket.emit('send_test_data', {data: 'please send test data'});
+        });
+        // --- END OF NEW JAVASCRIPT ---
+
+        socket.on('alert', (data) => {
+            console.log('Alert received:', data);
+            const alertsDiv = document.getElementById('alerts');
+            const alertElement = document.createElement('div');
+            alertElement.classList.add(`severity-${data.severity}`);
+            alertElement.innerHTML = `<strong>[${new Date().toLocaleTimeString()}] ${data.type} (${data.severity}):</strong> ${data.message}`;
+            alertsDiv.prepend(alertElement);
+        });
+
+        socket.on('device_list', (data) => {
+            console.log('Device list received:', data.devices);
+            const tableBody = document.querySelector("#device-table tbody");
+            tableBody.innerHTML = '';
+            data.devices.forEach(device => {
+                let row = tableBody.insertRow();
+                row.insertCell(0).innerText = device.ip;
+                row.insertCell(1).innerText = device.mac;
+                row.insertCell(2).innerText = device.vendor;
+            });
+        });
+    </script>
+</body>
+</html>
