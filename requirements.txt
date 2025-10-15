@@ -1,0 +1,8 @@
+flask
+flask-socketio
+scapy
+python-nmap
+python-socketio[client]
+requests
+websocket-client
+get-mac
